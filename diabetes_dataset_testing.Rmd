@@ -1,7 +1,7 @@
 ---
 title: "Diabetes Dataset Testing"
 output: html_document
-date: "2023-09-22"
+date: "2023-09-24"
 ---
 
 ```{r setup, include=FALSE}
@@ -11,114 +11,152 @@ library(mlbench)
 library(caret)
 library(glmnet)
 ```
+
+```{r}
+count_na_per_column <- function(df) {
+    sapply(df, function(x) sum(is.na(x)))
+}
+```
+
+
 ### Data
 ```{r}
 # Load the data and remove NAs
 data("PimaIndiansDiabetes2", package = "mlbench")
+count_na_per_column(PimaIndiansDiabetes2)
+#PimaIndiansDiabetes2$insulin[is.na(PimaIndiansDiabetes2$insulin)] <- mean(PimaIndiansDiabetes2$insulin)
+PimaIndiansDiabetes2$triceps[is.na(PimaIndiansDiabetes2$triceps)] <- median(PimaIndiansDiabetes2$triceps)
+
+PimaIndiansDiabetes2 <- subset(PimaIndiansDiabetes2, select = -c(insulin))
 PimaIndiansDiabetes2 <- na.omit(PimaIndiansDiabetes2)
 # Inspect the data
 head(PimaIndiansDiabetes2, 3)
 # Split the data into training and test set
 set.seed(2)
 training.samples <- PimaIndiansDiabetes2$diabetes %>% 
-  createDataPartition(p = 0.7, list = FALSE)
+  createDataPartition(p = 0.8, list = FALSE)
 train.data  <- PimaIndiansDiabetes2[training.samples, ]
 test.data <- PimaIndiansDiabetes2[-training.samples, ]
 ```
 ### i think everything needs to be standardized... --> glmnet() does is automatically
 ```{r}
 # Dummy code categorical predictor variables
-x <- model.matrix(diabetes~., data = train.data)[,-1]
+X <- model.matrix(diabetes~., data = train.data)[,-1]
+X <- scale(X)
 # Convert the outcome (class) to a numerical variable
-y <- ifelse(train.data$diabetes == "pos", 1, 0)
-y <- as.factor(y)
+y <- as.factor(ifelse(train.data$diabetes == "pos", 1, 0))
+# Test data
+x.test <- model.matrix(diabetes ~., test.data)[,-1]
+x.test <- scale(x.test)
+## observed y
+y.test <- as.factor(test.data$diabetes)
 ```
-
 ### Logistic Regression
 ```{r}
-log_reg <- glm(diabetes ~., data = train.data, family = binomial(link = "logit"))
+log_reg <- glm(diabetes ~., data = train.data, family = "binomial")
 
 # Make predictions
 probabilities <- log_reg %>% predict(test.data, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
 # Model accuracy
-observed.classes <- test.data$diabetes
-mean(predicted.classes == observed.classes)
+#mean(predicted.classes == y.test)
+confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
 ```
 ### LASSO lambda selection
 ```{r}
-set.seed(123)
-cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
-plot(cv.lasso)
+set.seed(3)
+cv.lasso <- cv.glmnet(X, y, alpha = 1, family = "binomial")
+#plot(cv.lasso)
 ```
 ### coefficients at different lambdas
 ```{r}
 options(scipen = 999)
-round(cbind(coef(cv.lasso, cv.lasso$lambda.min), coef(cv.lasso, cv.lasso$lambda.1se), coef(log_reg)), 4)
+round(cbind(coef(cv.lasso, s = cv.lasso$lambda.min), coef(cv.lasso, s = cv.lasso$lambda.1se), coef(log_reg)), 4)
 ```
 ### Final Lasso at lambda 1se for now
 ```{r}
 # Final model with lambda.min
-lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
-                      lambda = cv.lasso$lambda.1se) #cv.lasso$lambda.1se
+lasso.model <- glmnet(X, y, alpha = 1, family = "binomial",
+                      lambda = cv.lasso$lambda.min) #cv.lasso$lambda.1se
 coef(lasso.model)
 # Make prediction on test data
-x.test <- model.matrix(diabetes ~., test.data)[,-1]
 probabilities <- lasso.model %>% predict(newx = x.test)
 predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
 # Model accuracy
-observed.classes <- test.data$diabetes
-mean(predicted.classes == observed.classes)
+#mean(predicted.classes == y.test)
+confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
 ```
 ### Ridge lambda selection
 ```{r}
-set.seed(123)
-cv.ridge <- cv.glmnet(x, y, alpha = 0, family = "binomial")
-plot(cv.ridge)
+set.seed(1)
+cv.ridge <- cv.glmnet(X, y, alpha = 0, family = "binomial")
+#plot(cv.ridge)
 ```
 ### Ridge Model with lambda min
 ```{r}
 # Final model with lambda.min
-ridge.model <- glmnet(x, y, alpha = 0, family = "binomial",
+ridge.model <- glmnet(X, y, alpha = 0, family = "binomial",
                       lambda = cv.ridge$lambda.min)
 # Make prediction on test data
-x.test <- model.matrix(diabetes ~., test.data)[,-1]
 probabilities <- ridge.model %>% predict(newx = x.test)
 predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
 # Model accuracy
-observed.classes <- test.data$diabetes
-mean(predicted.classes == observed.classes)
+#mean(predicted.classes == y.test)
+confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
 ```
 ### Elastic Net alpha and lambda selection
 ```{r}
-set.seed(12)
+set.seed(1)
 # Prepare data
 # Set up cross-validation
 cvControl <- trainControl(method = "cv", number = 10)
 
 # Train the model using caret to find the best alpha
-elasticnet.model <- train(x, y, method = "glmnet",
+elasticnet.model <- train(X, y, method = "glmnet",
                           trControl = cvControl,
-                          tuneGrid = expand.grid(alpha = seq(0, 1, by = 0.01), 
-                                                 lambda = seq(0.001, 1, by = 0.01)))
+                          tuneGrid = expand.grid(alpha = seq(0.1, 1, by = 0.05), 
+                                                 lambda = 10^seq(2, -2, length=100)))
 
 # Best alpha
 best.alpha <- elasticnet.model$bestTune$alpha
 
 # Fit final model with best alpha and lambda.min
-final.model <- glmnet(x, y, alpha = best.alpha, family = "binomial",
+final.model <- glmnet(X, y, alpha = best.alpha, family = "binomial",
                       lambda = elasticnet.model$bestTune$lambda)
 
 # Make prediction on test data
-x.test <- model.matrix(diabetes ~ ., test.data)[, -1] # Replace 'your_formula' with your actual formula
 probabilities <- predict(final.model, newx = x.test, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-
 # Model accuracy
-observed.classes <- test.data$diabetes # Replace with your actual response variable
-mean(predicted.classes == observed.classes)
+#mean(predicted.classes == y.test)
+confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
 
+coef(final.model)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #### Trying everything with poly and interaction terms
 ```{r}
 # Load the data and remove NAs
