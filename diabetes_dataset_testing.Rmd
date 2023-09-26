@@ -10,131 +10,131 @@ library(tidyverse)
 library(mlbench)
 library(caret)
 library(glmnet)
+library(mice)
+library(performanceEstimation)
 ```
-
+### Functions
 ```{r}
 count_na_per_column <- function(df) {
     sapply(df, function(x) sum(is.na(x)))
 }
 ```
-
-
 ### Data
 ```{r}
-# Load the data and remove NAs
+# Loading the data
 data("PimaIndiansDiabetes2", package = "mlbench")
-count_na_per_column(PimaIndiansDiabetes2)
-#PimaIndiansDiabetes2$insulin[is.na(PimaIndiansDiabetes2$insulin)] <- mean(PimaIndiansDiabetes2$insulin)
-PimaIndiansDiabetes2$triceps[is.na(PimaIndiansDiabetes2$triceps)] <- median(PimaIndiansDiabetes2$triceps)
-
-PimaIndiansDiabetes2 <- subset(PimaIndiansDiabetes2, select = -c(insulin))
-PimaIndiansDiabetes2 <- na.omit(PimaIndiansDiabetes2)
-# Inspect the data
-head(PimaIndiansDiabetes2, 3)
-# Split the data into training and test set
-set.seed(2)
-training.samples <- PimaIndiansDiabetes2$diabetes %>% 
-  createDataPartition(p = 0.8, list = FALSE)
-train.data  <- PimaIndiansDiabetes2[training.samples, ]
-test.data <- PimaIndiansDiabetes2[-training.samples, ]
+diabetes <- PimaIndiansDiabetes2
+diabetes$diabetes <- as.factor(ifelse(diabetes$diabetes == "pos", 1, 0))
+count_na_per_column(diabetes)
+#diabetes <- subset(diabetes, select = -c(insulin))
+diabetes <- na.omit(diabetes)
 ```
-### i think everything needs to be standardized... --> glmnet() does is automatically
+### Data for models
 ```{r}
-# Dummy code categorical predictor variables
-X <- model.matrix(diabetes~., data = train.data)[,-1]
-X <- scale(X)
-# Convert the outcome (class) to a numerical variable
-y <- as.factor(ifelse(train.data$diabetes == "pos", 1, 0))
-# Test data
-x.test <- model.matrix(diabetes ~., test.data)[,-1]
-x.test <- scale(x.test)
-## observed y
-y.test <- as.factor(test.data$diabetes)
+# Split
+set.seed(123)
+n <- nrow(diabetes)
+training.samples <- sample(1:n, size = 0.75 * n)
+train.data <- diabetes[training.samples, ]
+test.data <- diabetes[-training.samples, ]
+test.data <- na.omit(test.data)
+  
+# Handle NA's in training set
+#mice <- complete(mice(subset(train.data, select = -c(triceps, insulin)), method='rf', seed = 123))
+#mice <- complete(mice(train.data, method='rf', seed = 123))
+
+#train.data$glucose <- mice$glucose
+#train.data$pressure <- mice$pressure
+#train.data$mass <- mice$mass
+
+#train.data <- na.omit(train.data)
+
+#mice.triceps <- complete(mice(subset(train.data, select = -insulin), method='rf', seed = 123))
+#train.data$triceps <- mice.triceps$triceps
+
+#mice.insulin <- complete(mice(train.data, method='rf', seed = 123))
+#train.data$insulin <- mice.insulin$insulin
+
+# Train
+X.train <- model.matrix(diabetes~., data = train.data)[,-1]
+X.train <- scale(X.train)
+y.train <- train.data$diabetes
+
+# Test
+X.test <- model.matrix(diabetes ~., data = test.data)[,-1]
+X.test <- scale(X.test)
+y.test <- test.data$diabetes
 ```
 ### Logistic Regression
 ```{r}
-log_reg <- glm(diabetes ~., data = train.data, family = "binomial")
+set.seed(123)
+log.model <- glm(diabetes ~., data = train.data, family = "binomial")
 
 # Make predictions
-probabilities <- log_reg %>% predict(test.data, type = "response")
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
+probabilities <- predict(log.model, newdata = test.data, type = "response")
+predicted.classes <- as.factor(ifelse(probabilities > 0.50, 1, 0))
+
+# Accuracy
+# mean(predicted.classes == y.test)
+confusionMatrix(predicted.classes, y.test, positive = "1")
+```
+### LASSO
+```{r}
+set.seed(123)
+cv.lasso.model <- cv.glmnet(X.train, y.train, alpha = 1, family = "binomial", intercept = FALSE)
+#plot(cv.lasso.model)
+coef(cv.lasso.model)
+
+# Make predictions
+probabilities <- predict(cv.lasso.model, newx = X.test, s = cv.lasso.model$lambda.min, type = "response")
+predicted.classes <- as.factor(ifelse(probabilities > 0.5, 1, 0))
+
+# Accuracy
 #mean(predicted.classes == y.test)
-confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
+confusionMatrix(predicted.classes, y.test, positive = "1")
 ```
-### LASSO lambda selection
+### Ridge
 ```{r}
-set.seed(3)
-cv.lasso <- cv.glmnet(X, y, alpha = 1, family = "binomial")
-#plot(cv.lasso)
-```
-### coefficients at different lambdas
-```{r}
-options(scipen = 999)
-round(cbind(coef(cv.lasso, s = cv.lasso$lambda.min), coef(cv.lasso, s = cv.lasso$lambda.1se), coef(log_reg)), 4)
-```
-### Final Lasso at lambda 1se for now
-```{r}
-# Final model with lambda.min
-lasso.model <- glmnet(X, y, alpha = 1, family = "binomial",
-                      lambda = cv.lasso$lambda.min) #cv.lasso$lambda.1se
-coef(lasso.model)
-# Make prediction on test data
-probabilities <- lasso.model %>% predict(newx = x.test)
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
-#mean(predicted.classes == y.test)
-confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
-```
-### Ridge lambda selection
-```{r}
-set.seed(1)
-cv.ridge <- cv.glmnet(X, y, alpha = 0, family = "binomial")
+set.seed(123)
+cv.ridge.model <- cv.glmnet(X.train, y.train, alpha = 0, family = "binomial", intercept = FALSE)
 #plot(cv.ridge)
-```
-### Ridge Model with lambda min
-```{r}
-# Final model with lambda.min
-ridge.model <- glmnet(X, y, alpha = 0, family = "binomial",
-                      lambda = cv.ridge$lambda.min)
-# Make prediction on test data
-probabilities <- ridge.model %>% predict(newx = x.test)
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
+
+# Make predictions
+probabilities <- predict(cv.ridge.model, newx = X.test, s = cv.ridge.model$lambda.min, type = "response")
+predicted.classes <- as.factor(ifelse(probabilities > 0.5, 1, 0))
+
+# Accuracy
 #mean(predicted.classes == y.test)
-confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
+confusionMatrix(as.factor(predicted.classes), y.test, positive = "1")
 ```
-### Elastic Net alpha and lambda selection
+### Elastic Net
 ```{r}
-set.seed(1)
-# Prepare data
-# Set up cross-validation
+set.seed(123)
+
+# CV and tuning grid
 cvControl <- trainControl(method = "cv", number = 10)
+tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.05), lambda = 10^seq(3, -3, length=100))
 
-# Train the model using caret to find the best alpha
-elasticnet.model <- train(X, y, method = "glmnet",
-                          trControl = cvControl,
-                          tuneGrid = expand.grid(alpha = seq(0.1, 1, by = 0.05), 
-                                                 lambda = 10^seq(2, -2, length=100)))
+# Train model
+elasticnet.model <- train(X.train, y.train, method = "glmnet", trControl = cvControl, 
+                          tuneGrid = tuneGrid, intercept = FALSE)
 
-# Best alpha
-best.alpha <- elasticnet.model$bestTune$alpha
+# Make predictions
+probabilities <- predict(elasticnet.model, newdata = X.test, type = "prob") # "raw" already outputs predicted.class
+predicted.classes <- ifelse(probabilities$`1` > 0.5, 1, 0)
 
-# Fit final model with best alpha and lambda.min
-final.model <- glmnet(X, y, alpha = best.alpha, family = "binomial",
-                      lambda = elasticnet.model$bestTune$lambda)
+# Accuracy
+# mean(predicted.classes == y.test)
+confusionMatrix(as.factor(predicted.classes), y.test, positive = "1")
 
-# Make prediction on test data
-probabilities <- predict(final.model, newx = x.test, type = "response")
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
-#mean(predicted.classes == y.test)
-confusionMatrix(as.factor(predicted.classes), y.test, positive = "pos")
-
-coef(final.model)
+# Output coefficients
+coef(elasticnet.model$finalModel, s = elasticnet.model$bestTune$lambda)
 ```
+### pretty good combinations
 
+"midastouch" elastic net - (insulin and triceps removed) - 0.75 acc.
 
+"midastouch" elastic net - (insulin, triceps and pedigree removed) - 0.72 acc.
 
 
 
