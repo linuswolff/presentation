@@ -12,6 +12,7 @@ library(caret)
 library(glmnet)
 library(mice)
 library(performanceEstimation)
+library(performance)
 ```
 ### Functions
 ```{r}
@@ -25,8 +26,15 @@ count_na_per_column <- function(df) {
 data("PimaIndiansDiabetes2", package = "mlbench")
 diabetes <- PimaIndiansDiabetes2
 diabetes$diabetes <- as.factor(ifelse(diabetes$diabetes == "pos", 1, 0))
+#diabetes <- subset(diabetes, !is.na(insulin) & !is.na(triceps))
+#diabetes$triceps <- ifelse(is.na(diabetes$triceps), 0, diabetes$triceps)
+#diabetes$insulin <- ifelse(is.na(diabetes$insulin), 0, diabetes$insulin)
 count_na_per_column(diabetes)
-#diabetes <- subset(diabetes, select = -c(insulin))
+#diabetes <- subset(diabetes, select = -insulin)
+#mice <- complete(mice(subset(diabetes, select = -c(triceps, insulin)), method='rf', seed = 123))
+#diabetes$glucose <- mice$glucose
+#diabetes$pressure <- mice$pressure
+#diabetes$mass <- mice$mass
 diabetes <- na.omit(diabetes)
 ```
 ### Data for models
@@ -34,10 +42,13 @@ diabetes <- na.omit(diabetes)
 # Split
 set.seed(123)
 n <- nrow(diabetes)
-training.samples <- sample(1:n, size = 0.75 * n)
+training.samples <- sample(1:n, size = 0.8 * n)
 train.data <- diabetes[training.samples, ]
+#train.data <- smote(diabetes ~ ., train.data, perc.over = 1)
 test.data <- diabetes[-training.samples, ]
 test.data <- na.omit(test.data)
+
+
   
 # Handle NA's in training set
 #mice <- complete(mice(subset(train.data, select = -c(triceps, insulin)), method='rf', seed = 123))
@@ -72,7 +83,7 @@ log.model <- glm(diabetes ~., data = train.data, family = "binomial")
 
 # Make predictions
 probabilities <- predict(log.model, newdata = test.data, type = "response")
-predicted.classes <- as.factor(ifelse(probabilities > 0.50, 1, 0))
+predicted.classes <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 
 # Accuracy
 # mean(predicted.classes == y.test)
@@ -81,9 +92,11 @@ confusionMatrix(predicted.classes, y.test, positive = "1")
 ### LASSO
 ```{r}
 set.seed(123)
-cv.lasso.model <- cv.glmnet(X.train, y.train, alpha = 1, family = "binomial", intercept = FALSE)
+cv.lasso.model <- cv.glmnet(X.train, y.train, alpha = 1, family = "binomial", intercept = T)
 #plot(cv.lasso.model)
-coef(cv.lasso.model)
+cbind(coef(cv.lasso.model, s = cv.lasso.model$lambda.min), coef(cv.lasso.model, s = cv.lasso.model$lambda.1se))
+
+
 
 # Make predictions
 probabilities <- predict(cv.lasso.model, newx = X.test, s = cv.lasso.model$lambda.min, type = "response")
@@ -96,7 +109,7 @@ confusionMatrix(predicted.classes, y.test, positive = "1")
 ### Ridge
 ```{r}
 set.seed(123)
-cv.ridge.model <- cv.glmnet(X.train, y.train, alpha = 0, family = "binomial", intercept = FALSE)
+cv.ridge.model <- cv.glmnet(X.train, y.train, alpha = 0, family = "binomial", intercept = T)
 #plot(cv.ridge)
 
 # Make predictions
@@ -112,12 +125,12 @@ confusionMatrix(as.factor(predicted.classes), y.test, positive = "1")
 set.seed(123)
 
 # CV and tuning grid
-cvControl <- trainControl(method = "cv", number = 10)
-tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.05), lambda = 10^seq(3, -3, length=100))
+cvControl <- trainControl(method = "cv", number = 20)
+tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.05), lambda = 10^seq(2, -2, length=100))
 
 # Train model
 elasticnet.model <- train(X.train, y.train, method = "glmnet", trControl = cvControl, 
-                          tuneGrid = tuneGrid, intercept = FALSE)
+                          tuneGrid = tuneGrid, intercept = T)
 
 # Make predictions
 probabilities <- predict(elasticnet.model, newdata = X.test, type = "prob") # "raw" already outputs predicted.class
@@ -130,6 +143,29 @@ confusionMatrix(as.factor(predicted.classes), y.test, positive = "1")
 # Output coefficients
 coef(elasticnet.model$finalModel, s = elasticnet.model$bestTune$lambda)
 ```
+
+```{r}
+library(ggcorrplot)
+# Ensure that all remaining columns after subsetting are numeric
+numeric_data <- subset(diabetes, select = -c(diabetes))
+corr <- round(cor(numeric_data), 1)
+ggcorrplot(corr,
+           type = "lower",
+           lab = TRUE,
+           lab_size = 3,
+           colors = c("red", "white", "cyan4"),
+           title = "Correlogram of Diabetes Dataset",
+           ggtheme = theme_bw())
+
+```
+```{r}
+check_collinearity(cv.lasso.model)
+```
+
+
+
+
+
 ### pretty good combinations
 
 "midastouch" elastic net - (insulin and triceps removed) - 0.75 acc.
