@@ -13,6 +13,8 @@ library(glmnet)
 library(mice)
 library(performanceEstimation)
 library(performance)
+library(knitr)
+library(kableExtra)
 ```
 ### Functions
 ```{r}
@@ -26,15 +28,7 @@ count_na_per_column <- function(df) {
 data("PimaIndiansDiabetes2", package = "mlbench")
 diabetes <- PimaIndiansDiabetes2
 diabetes$diabetes <- as.factor(ifelse(diabetes$diabetes == "pos", 1, 0))
-#diabetes <- subset(diabetes, !is.na(insulin) & !is.na(triceps))
-#diabetes$triceps <- ifelse(is.na(diabetes$triceps), 0, diabetes$triceps)
-#diabetes$insulin <- ifelse(is.na(diabetes$insulin), 0, diabetes$insulin)
 count_na_per_column(diabetes)
-#diabetes <- subset(diabetes, select = -insulin)
-#mice <- complete(mice(subset(diabetes, select = -c(triceps, insulin)), method='rf', seed = 123))
-#diabetes$glucose <- mice$glucose
-#diabetes$pressure <- mice$pressure
-#diabetes$mass <- mice$mass
 diabetes <- na.omit(diabetes)
 ```
 ### Data for models
@@ -125,7 +119,7 @@ confusionMatrix(as.factor(predicted.classes), y.test, positive = "1")
 set.seed(123)
 
 # CV and tuning grid
-cvControl <- trainControl(method = "cv", number = 20)
+cvControl <- trainControl(method = "cv", number = 10)
 tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.05), lambda = 10^seq(2, -2, length=100))
 
 # Train model
@@ -158,161 +152,7 @@ ggcorrplot(corr,
            ggtheme = theme_bw())
 
 ```
-```{r}
-check_collinearity(cv.lasso.model)
-```
-
-
-
-
-
-### pretty good combinations
-
-"midastouch" elastic net - (insulin and triceps removed) - 0.75 acc.
-
-"midastouch" elastic net - (insulin, triceps and pedigree removed) - 0.72 acc.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Trying everything with poly and interaction terms
-```{r}
-# Load the data and remove NAs
-data("PimaIndiansDiabetes2", package = "mlbench")
-PimaIndiansDiabetes2 <- na.omit(PimaIndiansDiabetes2)
-
-# Add polynomial terms
-PimaIndiansDiabetes2$age2 <- PimaIndiansDiabetes2$age^2
-PimaIndiansDiabetes2$mass2 <- PimaIndiansDiabetes2$mass^2
-PimaIndiansDiabetes2$insulin2 <- PimaIndiansDiabetes2$insulin^2
-PimaIndiansDiabetes2$glucose2 <- PimaIndiansDiabetes2$glucose^2
-PimaIndiansDiabetes2$pressure2 <- PimaIndiansDiabetes2$pressure^2
-
-# Add interaction terms
-PimaIndiansDiabetes2$age_mass <- PimaIndiansDiabetes2$age * PimaIndiansDiabetes2$mass
-PimaIndiansDiabetes2$age_insulin <- PimaIndiansDiabetes2$age * PimaIndiansDiabetes2$insulin
-PimaIndiansDiabetes2$age_glucose <- PimaIndiansDiabetes2$age * PimaIndiansDiabetes2$glucose
-PimaIndiansDiabetes2$age_pressure <- PimaIndiansDiabetes2$age * PimaIndiansDiabetes2$pressure
-
-PimaIndiansDiabetes2$mass_insulin <- PimaIndiansDiabetes2$mass * PimaIndiansDiabetes2$insulin
-PimaIndiansDiabetes2$mass_glucose <- PimaIndiansDiabetes2$mass * PimaIndiansDiabetes2$glucose
-PimaIndiansDiabetes2$mass_pressure <- PimaIndiansDiabetes2$mass * PimaIndiansDiabetes2$pressure
-
-PimaIndiansDiabetes2$insulin_glucose <- PimaIndiansDiabetes2$insulin * PimaIndiansDiabetes2$glucose
-PimaIndiansDiabetes2$insulin_pressure <- PimaIndiansDiabetes2$insulin * PimaIndiansDiabetes2$pressure
-
-PimaIndiansDiabetes2$glucose_pressure <- PimaIndiansDiabetes2$glucose * PimaIndiansDiabetes2$pressure
-
-# Split the data into training and test set
-set.seed(2)
-training.samples <- PimaIndiansDiabetes2$diabetes %>% 
-  createDataPartition(p = 0.7, list = FALSE)
-train.data  <- PimaIndiansDiabetes2[training.samples, ]
-test.data <- PimaIndiansDiabetes2[-training.samples, ]
-```
 
 ```{r}
-# Dummy code categorical predictor variables
-x <- model.matrix(diabetes~., data = train.data)[,-1]
-# Convert the outcome (class) to a numerical variable
-y <- ifelse(train.data$diabetes == "pos", 1, 0)
-y <- as.factor(y)
-```
-### log reg
-```{r}
-log_reg <- glm(diabetes ~., data = train.data, family = binomial(link = "logit"))
-
-# Make predictions
-probabilities <- log_reg %>% predict(test.data, type = "response")
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
-observed.classes <- test.data$diabetes
-mean(predicted.classes == observed.classes)
-```
-```{r}
-set.seed(123)
-cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
-plot(cv.lasso)
-```
-
-```{r}
-# Final model with lambda.min
-lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
-                      lambda = cv.lasso$lambda.1se) #cv.lasso$lambda.1se
-#coef(lasso.model)
-# Make prediction on test data
-x.test <- model.matrix(diabetes ~., test.data)[,-1]
-probabilities <- lasso.model %>% predict(newx = x.test)
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
-observed.classes <- test.data$diabetes
-mean(predicted.classes == observed.classes)
-```
-### Ridge lambda selection
-```{r}
-set.seed(123)
-cv.ridge <- cv.glmnet(x, y, alpha = 0, family = "binomial")
-plot(cv.ridge)
-```
-### Ridge Model with lambda min
-```{r}
-# Final model with lambda.min
-ridge.model <- glmnet(x, y, alpha = 0, family = "binomial",
-                      lambda = cv.ridge$lambda.min)
-# Make prediction on test data
-x.test <- model.matrix(diabetes ~., test.data)[,-1]
-probabilities <- ridge.model %>% predict(newx = x.test)
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-# Model accuracy
-observed.classes <- test.data$diabetes
-mean(predicted.classes == observed.classes)
-```
-
-
-### Elastic Net alpha and lambda selection
-```{r}
-set.seed(12)
-# Prepare data
-# Set up cross-validation
-cvControl <- trainControl(method = "cv", number = 10)
-
-# Train the model using caret to find the best alpha
-elasticnet.model <- train(x, y, method = "glmnet",
-                          trControl = cvControl,
-                          tuneGrid = expand.grid(alpha = seq(0, 1, by = 0.1), 
-                                                 lambda = seq(0.0001, 1, by = 0.0001)))
-
-# Best alpha
-best.alpha <- elasticnet.model$bestTune$alpha
-
-# Fit final model with best alpha and lambda.min
-final.model <- glmnet(x, y, alpha = best.alpha, family = "binomial",
-                      lambda = elasticnet.model$bestTune$lambda)
-
-# Make prediction on test data
-x.test <- model.matrix(diabetes ~ ., test.data)[, -1] # Replace 'your_formula' with your actual formula
-probabilities <- predict(final.model, newx = x.test, type = "response")
-predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
-
-# Model accuracy
-observed.classes <- test.data$diabetes # Replace with your actual response variable
-mean(predicted.classes == observed.classes)
+check_collinearity(log.model)
 ```
