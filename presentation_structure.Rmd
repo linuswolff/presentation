@@ -74,9 +74,13 @@ set.seed(123)
 n <- nrow(diabetes)
 training.samples <- sample(1:n, size = 0.75 * n)
 train.data <- diabetes[training.samples, ]
+scaled_train.data <- scale(train.data[, 1:8])
+train.data[, 1:8] <- scaled_train.data
 #train.data <- smote(diabetes ~ ., train.data, perc.over = 1)
 test.data <- diabetes[-training.samples, ]
-test.data <- na.omit(test.data)
+scaled_test.data <- scale(test.data[, 1:8])
+test.data[, 1:8] <- scaled_test.data
+#test.data <- na.omit(test.data)
 
 
   
@@ -98,12 +102,12 @@ test.data <- na.omit(test.data)
 
 # Train
 X.train <- model.matrix(diabetes~., data = train.data)[,-1]
-X.train <- scale(X.train)
+#X.train <- scale(X.train)
 y.train <- train.data$diabetes
 
 # Test
 X.test <- model.matrix(diabetes ~., data = test.data)[,-1]
-X.test <- scale(X.test)
+#X.test <- scale(X.test)
 y.test <- test.data$diabetes
 ```
 ### Logistic Regression
@@ -259,6 +263,7 @@ metrics.elasticnet <- calc_metrics(predicted.classes.elasticnet, y.test)
 df_metrics <- as.data.frame(matrix(c(metrics.log, metrics.lasso.min, metrics.lasso.1se, metrics.ridge, metrics.elasticnet), nrow = 5))
 colnames(df_metrics) <- c("Logistic", "Lasso_min", "Lasso_1se", "Ridge", "ElasticNet")
 rownames(df_metrics) <- c("AUC", "Sensitivity", "Specificity", "F1", "Accuracy")
+df_metrics
 ```
 
 ### Latex Table Metrics
