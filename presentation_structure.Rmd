@@ -16,6 +16,7 @@ library(performance)
 library(knitr)
 library(kableExtra)
 library(ROCR)
+library(cvms)
 ```
 ### Functions
 ```{r}
@@ -40,10 +41,36 @@ calc_metrics <- function(pred, true) {
   AUC <- as.numeric(perf@y.values)
   return(c(AUC, Sensitivity, Specificity, F1, Accuracy))
 }
+
+
+### A string like "Logistic" has to be put in. <--- from the colnames of df_coef
+importance_plot <- function(model_string) {
+
+# Create a data frame for plotting
+coef_df <- data.frame(
+  Variable = rownames(df_coef)[-1],  # Exclude the intercept
+  Importance = abs(df_coef[-1, model_string])  # Exclude the intercept
+)
+
+# Order the variables by importance
+coef_df <- coef_df[order(coef_df$Importance), ]
+
+# Plot
+ggplot(coef_df, aes(x = reorder(Variable, Importance), y = Importance, fill = Importance)) +
+  geom_bar(stat = "identity") +
+  scale_fill_gradient(low = "lightblue2", high = "lightblue3") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 12),
+        axis.text.x = element_text(size = 10),
+        title = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position = "none") +
+  coord_flip() +
+  ggtitle(paste(model_string, "Model - Variable Importance"))
+
+}
 ```
-
-
-
 
 ### 5. Data Processing
 ```{r}
@@ -52,12 +79,12 @@ data("PimaIndiansDiabetes2", package = "mlbench")
 diabetes <- PimaIndiansDiabetes2
 diabetes$diabetes <- as.factor(ifelse(diabetes$diabetes == "pos", 1, 0))
 #diabetes$diabetes <- ifelse(diabetes$diabetes == "pos", 1, 0)
-kable(t(count_na_per_column(diabetes)))
+#kable(t(count_na_per_column(diabetes)))
 ```
 ### Removing NA's
 ```{r}
 diabetes <- na.omit(diabetes)
-kable(t(count_na_per_column(diabetes)))
+#kable(t(count_na_per_column(diabetes)))
 ```
 ### Removing Outliers
 ```{r}
@@ -70,7 +97,7 @@ outliers <- as.vector(outliers)
 ### Data for models
 ```{r}
 # Split
-set.seed(123)
+set.seed(222)
 n <- nrow(diabetes)
 training.samples <- sample(1:n, size = 0.75 * n)
 train.data <- diabetes[training.samples, ]
@@ -121,7 +148,8 @@ predicted.classes.log <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 
 # Accuracy
 # mean(predicted.classes == y.test)
-confusionMatrix(predicted.classes.log, y.test, positive = "1")
+log.conf <- confusionMatrix(predicted.classes.log, y.test, positive = "1")
+log.conf
 ```
 ### LASSO
 ```{r}
@@ -140,7 +168,11 @@ predicted.classes.lasso.1se <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 
 # Accuracy
 #mean(predicted.classes.lasso.min == y.test)
-confusionMatrix(predicted.classes.lasso.min, y.test, positive = "1")
+lasso.min.conf <- confusionMatrix(predicted.classes.lasso.min, y.test, positive = "1")
+lasso.min.conf
+
+lasso.1se.conf <- confusionMatrix(predicted.classes.lasso.1se, y.test, positive = "1")
+lasso.1se.conf
 ```
 in data: set.seed(123) and train 0.75 all others see(123) i like it a lot. min and 1se very sparse and good pred, just not much difference in amount of sparsity and amount of FN
 
@@ -172,7 +204,8 @@ predicted.classes.ridge <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 
 # Accuracy
 #mean(predicted.classes.ridge == y.test)
-confusionMatrix(as.factor(predicted.classes.ridge), y.test, positive = "1")
+ridge.conf <- confusionMatrix(as.factor(predicted.classes.ridge), y.test, positive = "1")
+ridge.conf
 ```
 ### Elastic Net
 ```{r}
@@ -196,7 +229,8 @@ predicted.classes.elasticnet <- ifelse(probabilities$`1` > 0.5, 1, 0)
 
 # Accuracy
 # mean(predicted.classes == y.test)
-confusionMatrix(as.factor(predicted.classes.elasticnet), y.test, positive = "1")
+elasticnet.conf <- confusionMatrix(as.factor(predicted.classes.elasticnet), y.test, positive = "1")
+elasticnet.conf
 
 # Output coefficients
 coef(elasticnet.model$finalModel, s = elasticnet.model$bestTune$lambda)
@@ -298,20 +332,18 @@ df_coef <- data.frame(
   Ridge = as.vector(as.matrix(coef.ridge)),
   ElasticNet = as.vector(as.matrix(coef.elasticnet))
 )
-options(scipen = 999)
-df_coef <- round(df_coef, 4)
-df_coef[] <- apply(df_coef, 2, function(x) ifelse(x == 0, '.', x))
-
-
-# Set the row names to be the names of the coefficients from one of the models
 rownames(df_coef) <- names(coef.log)
 
-df_coef
+options(scipen = 999)
+df_coef_sparse <- round(df_coef, 4)
+df_coef_sparse[] <- apply(df_coef, 2, function(x) ifelse(x == 0, '.', x))
+
+df_coef_sparse
 ```
 ### Latex Table Coef
 ```{r results='asis'}
-coef_latex <- df_coef %>%
-  kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
+coef_latex <- df_coef_sparse %>%
+  kable(digits = 3, format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
         col.names = c("Logistic", "Lasso $\\lambda_{\\text{min}}$", 
                       "Lasso $\\lambda_{\\text{1se}}$", "Ridge", "ElasticNet")) %>%
   kable_styling(latex_options = c("striped", "scale_down", "hold_position"), position = "center") %>%
@@ -321,4 +353,115 @@ coef_latex <- df_coef %>%
 
 print(coef_latex)
 ```
+### Confusion matrix latex - log.model
+```{r}
+# Convert the table to a data frame
+log.conf.df <- as.data.frame(log.conf$table)
 
+# Replace the numeric labels with text labels
+log.conf.df$Prediction <- factor(log.conf.df$Prediction, levels = c("0", "1"), labels = c("Negative", "Positive"))
+log.conf.df$Reference <- factor(log.conf.df$Reference, levels = c("0", "1"), labels = c("Negative", "Positive"))
+
+# Rename columns as required by cvms
+names(log.conf.df) <- c('Target','Prediction','N')
+# Plot the confusion matrix using cvms
+plot_confusion_matrix(log.conf.df, add_normalized = FALSE,
+  add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE,
+  place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
+
+```
+### Confusion matrix latex - lasso.min.model
+```{r}
+# For lasso.min.conf
+lasso.min.conf.df <- as.data.frame(lasso.min.conf$table)
+lasso.min.conf.df$Prediction <- factor(lasso.min.conf.df$Prediction, levels = c("0", "1"), labels = c("Negative", "Positive"))
+lasso.min.conf.df$Reference <- factor(lasso.min.conf.df$Reference, levels = c("0", "1"), labels = c("Negative", "Positive"))
+names(lasso.min.conf.df) <- c('Target','Prediction','N')
+plot_confusion_matrix(lasso.min.conf.df, add_normalized = FALSE, add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE, place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
+```
+
+### Confusion matrix latex - lasso.1se.model
+```{r}
+lasso.1se.conf.df <- as.data.frame(lasso.1se.conf$table)
+lasso.1se.conf.df$Prediction <- factor(lasso.1se.conf.df$Prediction, levels = c("0", "1"), labels = c("Negative", "Positive"))
+lasso.1se.conf.df$Reference <- factor(lasso.1se.conf.df$Reference, levels = c("0", "1"), labels = c("Negative", "Positive"))
+names(lasso.1se.conf.df) <- c('Target','Prediction','N')
+plot_confusion_matrix(lasso.1se.conf.df, add_normalized = FALSE, add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE, place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
+```
+
+### Confusion matrix latex - ridge.model
+```{r}
+# For ridge.conf
+ridge.conf.df <- as.data.frame(ridge.conf$table)
+ridge.conf.df$Prediction <- factor(ridge.conf.df$Prediction, levels = c("0", "1"), labels = c("Negative", "Positive"))
+ridge.conf.df$Reference <- factor(ridge.conf.df$Reference, levels = c("0", "1"), labels = c("Negative", "Positive"))
+names(ridge.conf.df) <- c('Target','Prediction','N')
+plot_confusion_matrix(ridge.conf.df, add_normalized = FALSE, add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE, place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
+```
+
+### Confusion matrix latex - elasticnet.model
+```{r}
+# For elasticnet.conf
+elasticnet.conf.df <- as.data.frame(elasticnet.conf$table)
+elasticnet.conf.df$Prediction <- factor(elasticnet.conf.df$Prediction, levels = c("0", "1"), labels = c("Negative", "Positive"))
+elasticnet.conf.df$Reference <- factor(elasticnet.conf.df$Reference, levels = c("0", "1"), labels = c("Negative", "Positive"))
+names(elasticnet.conf.df) <- c('Target','Prediction','N')
+plot_confusion_matrix(elasticnet.conf.df, add_normalized = FALSE, add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE, place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
+```
+### Variable Importance
+```{r}
+importance_plot("Logistic")
+importance_plot("Lasso_min")
+importance_plot("Lasso_1se")
+importance_plot("Ridge")
+importance_plot("ElasticNet")
+```
+Perc missing
+```{r}
+library(ggplot2)
+
+# Count of missing values per column
+count_na <- c(pregnant = 0, glucose = 5, pressure = 35, triceps = 227, insulin = 374, mass = 11, pedigree = 0, age = 0, diabetes = 0)
+
+# Total number of rows in the data
+n_rows <- nrow(diabetes)
+
+# Convert to data frame and calculate percentages
+df_na <- data.frame(Column = names(count_na), Count = as.numeric(count_na))
+df_na$Percentage <- (df_na$Count / n_rows) * 100
+
+# Plot
+ggplot(df_na, aes(x = reorder(Column, -Percentage), y = Percentage, fill = Percentage)) +
+  geom_bar(stat = "identity") +
+  scale_fill_gradient(low = "lightblue1", high = "lightblue3") +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    title = element_text(size = 15),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none"
+  ) +
+  ggtitle("Percentage of Missing Values per Column")
+
+```
+log model summary table latex
+
+```{r results='asis'}
+# Extract coefficients from the model summary
+coef_summary <- summary(log.model)$coefficients
+
+# Convert the matrix to a data frame for kable()
+coef_summary <- round(as.data.frame(coef_summary)[, c(1, 4)], 3)
+colnames(coef_summary) <- c("Estimate", "p-value")
+
+coef_summary$`p-value` <- cell_spec(coef_summary$`p-value`, "latex", 
+                                bold = ifelse(coef_summary$`p-value` < 0.05, TRUE, FALSE))
+# Create the LaTeX table
+kable(coef_summary, "latex", booktabs = TRUE, align = "c", escape = F) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position")) %>%
+  row_spec(0, bold = TRUE)
+
+
+```
