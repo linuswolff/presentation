@@ -1,5 +1,6 @@
 ---
-title: "Diabetes Dataset Testing"
+title: "Diabetes - (Penalized) Logistic Regression Presentation"
+author: "Group 6 - EBA1"
 output: pdf_document
 date: "2023-09-24"
 ---
@@ -17,9 +18,11 @@ library(knitr)
 library(kableExtra)
 library(ROCR)
 library(cvms)
+library(ggcorrplot)
 ```
 ### Functions
 ```{r}
+# Count NA's per column
 count_na_per_column <- function(df) {
     sapply(df, function(x) sum(is.na(x)))
 }
@@ -41,7 +44,6 @@ calc_metrics <- function(pred, true) {
   AUC <- as.numeric(perf@y.values)
   return(c(AUC, Sensitivity, Precision, F1, Accuracy))
 }
-
 
 ### A string like "Logistic" has to be put in. <--- from the colnames of df_coef
 importance_plot <- function(model_string) {
@@ -71,70 +73,39 @@ ggplot(coef_df, aes(x = reorder(Variable, Importance), y = Importance, fill = Im
 
 }
 ```
-
 ### 5. Data Processing
 ```{r}
-# Loading the data
 data("PimaIndiansDiabetes2", package = "mlbench")
 diabetes <- PimaIndiansDiabetes2
 diabetes$diabetes <- as.factor(ifelse(diabetes$diabetes == "pos", 1, 0))
-#diabetes$diabetes <- ifelse(diabetes$diabetes == "pos", 1, 0)
-#kable(t(count_na_per_column(diabetes)))
 ```
 ### Removing NA's
 ```{r}
 diabetes <- na.omit(diabetes)
-#kable(t(count_na_per_column(diabetes)))
-```
-### Removing Outliers
-```{r}
-outliers <- check_outliers(diabetes, method = "mahalanobis")
-#plot(outliers)
-outliers <- as.vector(outliers)
-
-#diabetes <- diabetes[!outliers, ]
 ```
 ### Data for models
 ```{r}
 # Split
 set.seed(222)
 n <- nrow(diabetes)
+
+# Training
 training.samples <- sample(1:n, size = 0.75 * n)
 train.data <- diabetes[training.samples, ]
 scaled_train.data <- scale(train.data[, 1:8])
 train.data[, 1:8] <- scaled_train.data
-#train.data <- smote(diabetes ~ ., train.data, perc.over = 1)
+
+# Testing
 test.data <- diabetes[-training.samples, ]
 scaled_test.data <- scale(test.data[, 1:8])
 test.data[, 1:8] <- scaled_test.data
-#test.data <- na.omit(test.data)
-
-
-  
-# Handle NA's in training set
-#mice <- complete(mice(subset(train.data, select = -c(triceps, insulin)), method='rf', seed = 123))
-#mice <- complete(mice(train.data, method='rf', seed = 123))
-
-#train.data$glucose <- mice$glucose
-#train.data$pressure <- mice$pressure
-#train.data$mass <- mice$mass
-
-#train.data <- na.omit(train.data)
-
-#mice.triceps <- complete(mice(subset(train.data, select = -insulin), method='rf', seed = 123))
-#train.data$triceps <- mice.triceps$triceps
-
-#mice.insulin <- complete(mice(train.data, method='rf', seed = 123))
-#train.data$insulin <- mice.insulin$insulin
 
 # Train
 X.train <- model.matrix(diabetes~., data = train.data)[,-1]
-#X.train <- scale(X.train)
 y.train <- train.data$diabetes
 
 # Test
 X.test <- model.matrix(diabetes ~., data = test.data)[,-1]
-#X.test <- scale(X.test)
 y.test <- test.data$diabetes
 ```
 ### Logistic Regression
@@ -166,44 +137,24 @@ predicted.classes.lasso.min <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 probabilities <- predict(cv.lasso.model, newx = X.test, s = cv.lasso.model$lambda.1se, type = "response")
 predicted.classes.lasso.1se <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 
-# Accuracy
-#mean(predicted.classes.lasso.min == y.test)
+# Accuracy Min
 lasso.min.conf <- confusionMatrix(predicted.classes.lasso.min, y.test, positive = "1")
 lasso.min.conf
 
+# Accuracy 1se
 lasso.1se.conf <- confusionMatrix(predicted.classes.lasso.1se, y.test, positive = "1")
 lasso.1se.conf
 ```
-in data: set.seed(123) and train 0.75 all others see(123) i like it a lot. min and 1se very sparse and good pred, just not much difference in amount of sparsity and amount of FN
-
-in data: set.seed(2) and train 0.75 all others see(123) i like it a lot. 1se sparse and more FN but same pred
-
-in data: set.seed(222) and train 0.75 all others see(123) pretty good similar too above
-
-in data: set.seed(6) and train 0.75 all others see(123) gives very sparse 1se lasso and okay pred
-
-in data: set.seed(13) and train 0.75 all others see(123) pretty nice! sparse 1se, but pred is same
-
-in data: set.seed(42) and train 0.75 all others see(123) pretty nice! very very sparse 1se, more FN in 1se
-
-some things we see:
-
-- the more conservative model (1se) usually has more FN ---> it makes the safe/conservative choice of going for the class that has 2/3 of observations
-
-
-
 ### Ridge
 ```{r}
 set.seed(123)
 cv.ridge.model <- cv.glmnet(X.train, y.train, alpha = 0, family = "binomial", intercept = T)
-#plot(cv.ridge)
 
 # Make predictions
 probabilities <- predict(cv.ridge.model, newx = X.test, s = cv.ridge.model$lambda.min, type = "response")
 predicted.classes.ridge <- as.factor(ifelse(probabilities > 0.5, 1, 0))
 
 # Accuracy
-#mean(predicted.classes.ridge == y.test)
 ridge.conf <- confusionMatrix(as.factor(predicted.classes.ridge), y.test, positive = "1")
 ridge.conf
 ```
@@ -212,11 +163,8 @@ ridge.conf
 set.seed(123)
 
 # CV and tuning grid
-
 myFolds <- createFolds(y.train, k = 10, list = TRUE)
 myControl <- trainControl(index = myFolds)
-
-#cvControl <- trainControl(method = "cv", number = 10)
 tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.05), lambda = 10^seq(1, -3, length=100))
 
 # Train model
@@ -224,36 +172,45 @@ elasticnet.model <- train(X.train, y.train, method = "glmnet", trControl = myCon
                           tuneGrid = tuneGrid, intercept = T, family = "binomial")
 
 # Make predictions
-probabilities <- predict(elasticnet.model, newdata = X.test, type = "prob") # "raw" already outputs predicted.class
+probabilities <- predict(elasticnet.model, newdata = X.test, type = "prob")
 predicted.classes.elasticnet <- ifelse(probabilities$`1` > 0.5, 1, 0)
 
 # Accuracy
-# mean(predicted.classes == y.test)
 elasticnet.conf <- confusionMatrix(as.factor(predicted.classes.elasticnet), y.test, positive = "1")
 elasticnet.conf
 
-# Output coefficients
+# Coefficients
 coef(elasticnet.model$finalModel, s = elasticnet.model$bestTune$lambda)
 ```
 
+
+------------------------------------------------------------------------------------
+# Starting here is all the code for the generation of Plots, Latex Tables etc.
+------------------------------------------------------------------------------------
+
+### Plotting the Parameter Grid for ElasticNet
 ```{r}
-# Filter data to only include specific alpha values
-filtered_data <- subset(elasticnet.model$results, alpha %in% seq(0, 1, by=0.1))
+# Only using some alphas
+filtered_data <- subset(elasticnet.model$results, alpha %in% seq(0.1, 0.9, by=0.1))
 
 # Create the plot
 ggplot(filtered_data, aes(x=lambda, y=Accuracy, color=factor(alpha))) +
-  geom_point() +
-  geom_line() +
-  scale_x_log10() + 
+  geom_point(size = 2, alpha = 0.6) +
+  geom_line(size = 0.5) +
+  scale_x_log10() +
   scale_color_discrete(name = "Alpha") +
   labs(x = "Lambda", y = "Accuracy") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 18),
+    axis.title = element_text(size = 20),
+    legend.text = element_text(size = 18),
+    legend.title = element_text(size = 20),
+    panel.grid.major = element_blank()
+  )
 ```
-
-
+### Correlation Matrix Plot
 ```{r}
-library(ggcorrplot)
-# Ensure that all remaining columns after subsetting are numeric
 numeric_data <- subset(diabetes, select = -c(diabetes))
 corr <- round(cor(numeric_data), 1)
 ggcorrplot(corr,
@@ -262,27 +219,13 @@ ggcorrplot(corr,
            lab_size = 3,
            colors = c("red", "white", "cyan4"),
            title = "Correlogram of Diabetes Dataset",
-           ggtheme = theme_bw())
-
+           ggtheme = theme_bw()
+)
 ```
-
+### Collinearity Plot
 ```{r}
 result <- check_collinearity(log.model)
 plot(result) + ggtitle("")
-```
-### Outliers
-```{r}
-result <- check_outliers(diabetes, method = "mahalanobis")
-plot(result, type = "dots")
-result
-as.vector(result)
-
-```
-### Check model
-```{r}
-check <- check_model(log.model, panel = F)
-plot(check)
-binned_residuals(log.model)
 ```
 ### Calculate model metrics
 ```{r}
@@ -299,7 +242,6 @@ colnames(df_metrics) <- c("Logistic", "Lasso_min", "Lasso_1se", "Ridge", "Elasti
 rownames(df_metrics) <- c("AUC", "Recall", "Precision", "F1", "Accuracy")
 df_metrics
 ```
-
 ### Latex Table Metrics
 ```{r results='asis'}
 metrics_latex <- df_metrics[-1, ] %>%
@@ -408,56 +350,15 @@ elasticnet.conf.df$Reference <- factor(elasticnet.conf.df$Reference, levels = c(
 names(elasticnet.conf.df) <- c('Target','Prediction','N')
 plot_confusion_matrix(elasticnet.conf.df, add_normalized = FALSE, add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE, place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
 ```
-### Variable Importance not working great because font size
+### Variable Importance Plots
 ```{r}
-#png(filename = "varimp_log.png", width = 3000, height = 3000)
 importance_plot("Logistic")
-#dev.off()
-#png(filename = "varimp_lasso_min.png", width = 3000, height = 3000)
 importance_plot("Lasso_min")
-#dev.off()
-#png(filename = "varimp_lasso_1se.png", width = 3000, height = 3000)
 importance_plot("Lasso_1se")
-#dev.off()
-#png(filename = "varimp_ridge.png", width = 3000, height = 3000)
 importance_plot("Ridge")
-#dev.off()
-#png(filename = "varimp_elasticnet.png", width = 3000, height = 3000)
 importance_plot("ElasticNet")
-#dev.off()
 ```
-Perc missing
-```{r}
-library(ggplot2)
-
-# Count of missing values per column
-count_na <- c(pregnant = 0, glucose = 5, pressure = 35, triceps = 227, insulin = 374, mass = 11, pedigree = 0, age = 0, diabetes = 0)
-
-# Total number of rows in the data
-n_rows <- nrow(diabetes)
-
-# Convert to data frame and calculate percentages
-df_na <- data.frame(Column = names(count_na), Count = as.numeric(count_na))
-df_na$Percentage <- (df_na$Count / n_rows) * 100
-
-# Plot
-ggplot(df_na, aes(x = reorder(Column, -Percentage), y = Percentage, fill = Percentage)) +
-  geom_bar(stat = "identity") +
-  scale_fill_gradient(low = "lightblue1", high = "lightblue3") +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12),
-    title = element_text(size = 15),
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
-    legend.position = "none"
-  ) +
-  ggtitle("Percentage of Missing Values per Column")
-
-```
-log model summary table latex
-
+### logistic model summary table latex
 ```{r results='asis'}
 # Extract coefficients from the model summary
 coef_summary <- summary(log.model)$coefficients
@@ -486,7 +387,7 @@ kable(coef_summary, "latex", booktabs = TRUE, align = "c", escape = F) %>%
   row_spec(0, bold = TRUE)
 
 ```
-
+### continued log model latex table
 ```{r results='asis'}
 coef_latex <- coef_summary %>%
   kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
@@ -498,7 +399,6 @@ coef_latex <- coef_summary %>%
 
 print(coef_latex)
 ```
-
 ### coef latex per model - lasso both
 ```{r results='asis'}
 coef_latex <- df_coef_sparse[, 2:3] %>%
@@ -535,12 +435,9 @@ coef_latex <- df_coef_sparse[, c(1,5)] %>%
 
 print(coef_latex)
 ```
-
+### Coefficient path plot - not included in slides
 ```{r}
-# Plot the coefficient paths with thicker lines
 plot(cv.lasso.model$glmnet.fit, xvar = "lambda", label = TRUE, cex.axis = 1.5, lwd = 2)
-
-# Add vertical lines for lambda.min and lambda.1se with thicker lines
 abline(v = log(cv.lasso.model$lambda.min), col = "red", lty = 2, lwd = 2)
 abline(v = log(cv.lasso.model$lambda.1se), col = "blue", lty = 2, lwd = 2)
 
@@ -551,11 +448,10 @@ legend("topright",
        lty = 2, 
        cex = 1.5, 
        lwd = 0.5, bty = "n")
-
 ```
-p value Acc > NIR
+### Manual calculation of p-value - Acc > NIR -- Logistic Model Example --> identical to result from confusionMatrix()
 ```{r}
-# Number of trials
+# Number of trials in test data
 n <- 98
 
 # Number of successes (correctly classified instances)
@@ -572,6 +468,7 @@ binom_test_result <- binom.test(n_success, n, p = nir, alternative = "greater")
 print(binom_test_result)
 
 ```
+### Accuracy and p value table
 ```{r results='asis'}
 log.conf$overall["Accuracy"]
 log.conf$overall["AccuracyPValue"]
@@ -591,6 +488,7 @@ kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("scale_down", "hold_position"))
 
 ```
+### Accuracy and p value table
 ```{r}
 result_table <- tibble(Accuracy = log.conf$overall["Accuracy"],
                        `p-value [Acc > NIR]` = log.conf$overall["AccuracyPValue"])
@@ -603,7 +501,7 @@ result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 
 kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("scale_down", "hold_position"))
 ```
-
+### Accuracy and p value table
 ```{r}
 result_table <- tibble(Accuracy = ridge.conf$overall["Accuracy"],
                        `p-value [Acc > NIR]` = ridge.conf$overall["AccuracyPValue"])
@@ -616,7 +514,7 @@ result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 
 kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("scale_down", "hold_position"))
 ```
-
+### Accuracy and p value table
 ```{r}
 #c("Lasso $\\lambda_{\\text{min}}$", "Lasso $\\lambda_{\\text{1se}}$")
 result_table <- tibble(Accuracy = lasso.min.conf$overall["Accuracy"],
@@ -630,7 +528,7 @@ result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 
 kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("scale_down", "hold_position"))
 ```
-
+### Accuracy and p value table
 ```{r}
 result_table <- tibble(Accuracy = lasso.1se.conf$overall["Accuracy"],
                        `p-value [Acc > NIR]` = lasso.1se.conf$overall["AccuracyPValue"])
@@ -643,7 +541,7 @@ result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 
 kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("scale_down", "hold_position"))
 ```
-
+### Accuracy and p value table
 ```{r}
 result_table <- tibble(Accuracy = elasticnet.conf$overall["Accuracy"],
                        `p-value [Acc > NIR]` = elasticnet.conf$overall["AccuracyPValue"])
@@ -655,4 +553,16 @@ result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 
 # Generate LaTeX table
 kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
   kable_styling(latex_options = c("scale_down", "hold_position"))
+```
+### Plotting the distributions of the 8 predictor variables
+```{r}
+par(mfrow=c(2, 4))
+hist(diabetes$glucose, breaks = 5, col = "sky blue", main = "Glucose", xlab = NULL)
+hist(diabetes$pressure, breaks = 5, col = "sky blue", main = "Blood Pressure", xlab = NULL)
+hist(diabetes$triceps, breaks = 10, col = "sky blue", main = "Skin Thickness", xlab = NULL)
+hist(diabetes$mass, breaks = 10, col = "sky blue", main = "BMI", xlab = NULL)
+hist(diabetes$pregnant, breaks = 10, col = "sky blue", main = "No. of Pregnancies", xlab = NULL)
+hist(diabetes$insulin, breaks = 10, col = "sky blue", main = "Insulin", xlab = NULL)
+hist(diabetes$pedigree , breaks = 10, col = "sky blue", main = "Pedigree", xlab = NULL)
+hist(diabetes$age , breaks = 10, col = "sky blue", main = "Age", xlab = NULL)
 ```
