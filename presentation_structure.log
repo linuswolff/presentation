@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.9.20)  28 SEP 2023 11:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.9.20)  28 SEP 2023 19:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -577,7 +577,7 @@ LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 45
 (/Users/wolff/Library/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [6] [7]
-<presentation_structure_files/figure-latex/unnamed-chunk-10-1.pdf, id=126, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-10-1.pdf, id=142, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-10-1.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-10-1.pdf  used on input line 607.
@@ -587,12 +587,12 @@ Underfull \vbox (badness 2302) detected at line 623
  []
 
 [8 <./presentation_structure_files/figure-latex/unnamed-chunk-10-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-11-1.pdf, id=136, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-11-1.pdf, id=152, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-11-1.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-11-1.pdf  used on input line 625.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-<presentation_structure_files/figure-latex/unnamed-chunk-12-1.pdf, id=137, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-12-1.pdf, id=153, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-12-1.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 638.
@@ -603,36 +603,36 @@ Underfull \hbox (badness 10000) in paragraph at lines 638--640
  []
 
 [9 <./presentation_structure_files/figure-latex/unnamed-chunk-11-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-13-1.pdf, id=148, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-13-1.pdf, id=164, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-13-1.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 648.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [10 <./presentation_structure_files/figure-latex/unnamed-chunk-12-1.pdf>] [11 <./presentation_structure_files/figure-latex/unnamed-chunk-13-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-14-1.pdf, id=171, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-14-1.pdf, id=187, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-14-1.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 720.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-<presentation_structure_files/figure-latex/unnamed-chunk-14-2.pdf, id=172, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-14-2.pdf, id=188, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-14-2.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-14-2.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-14-2.pdf  used on input line 727.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [12 <./presentation_structure_files/figure-latex/unnamed-chunk-14-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-14-3.pdf, id=183, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-14-3.pdf, id=199, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-14-3.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-14-3.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-14-3.pdf  used on input line 734.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [13 <./presentation_structure_files/figure-latex/unnamed-chunk-14-2.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-14-4.pdf, id=197, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-14-4.pdf, id=213, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-14-4.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-14-4.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-14-4.pdf  used on input line 741.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [14 <./presentation_structure_files/figure-latex/unnamed-chunk-14-3.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-14-5.pdf, id=210, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-14-5.pdf, id=226, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-14-5.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-14-5.pdf>
 Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-14-5.pdf  used on input line 748.
@@ -644,124 +644,157 @@ Overfull \hbox (44.74348pt too wide) in paragraph at lines 758--758
 
 [16 <./presentation_structure_files/figure-latex/unnamed-chunk-14-5.pdf>]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 825.
+(Font)              <10> on input line 824.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 825.
+(Font)              <7> on input line 824.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 825.
+(Font)              <5> on input line 824.
 [17{/Users/wolff/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}] [18]
-<presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf, id=247, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf, id=263, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf  used on input line 956.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf  used on input line 945.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 956--958
+Underfull \hbox (badness 10000) in paragraph at lines 945--947
 [][]
  []
 
-<presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf, id=248, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf, id=264, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf  used on input line 980.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf  used on input line 969.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [19 <./presentation_structure_files/figure-latex/unnamed-chunk-19-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf, id=259, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf, id=275, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf  used on input line 1006.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf  used on input line 995.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [20 <./presentation_structure_files/figure-latex/unnamed-chunk-20-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf, id=270, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf, id=286, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf  used on input line 1033.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf  used on input line 1022.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [21 <./presentation_structure_files/figure-latex/unnamed-chunk-21-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf, id=281, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf, id=298, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf  used on input line 1060.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf  used on input line 1049.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 1060--1062
+Underfull \hbox (badness 10000) in paragraph at lines 1049--1051
 [][]
  []
 
 [22 <./presentation_structure_files/figure-latex/unnamed-chunk-22-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf, id=293, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf, id=309, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf  used on input line 1069.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf  used on input line 1059.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [23 <./presentation_structure_files/figure-latex/unnamed-chunk-23-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf, id=303, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf, id=319, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf  used on input line 1077.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf  used on input line 1069.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [24 <./presentation_structure_files/figure-latex/unnamed-chunk-24-1.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf, id=313, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf, id=329, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf  used on input line 1085.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf  used on input line 1079.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [25 <./presentation_structure_files/figure-latex/unnamed-chunk-24-2.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf, id=324, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf, id=340, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf  used on input line 1093.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf  used on input line 1089.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [26 <./presentation_structure_files/figure-latex/unnamed-chunk-24-3.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf, id=334, 469.755pt x 325.215pt>
+<presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf, id=350, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf  used on input line 1101.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf  used on input line 1099.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 1101--1103
-[][]
- []
-
-[27 <./presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf>]
-Underfull \vbox (badness 10000) detected at line 1133
- []
-
-[28 <./presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf>]
-<presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf, id=353, 469.755pt x 325.215pt>
+[27 <./presentation_structure_files/figure-latex/unnamed-chunk-24-4.pdf>] [28 <./presentation_structure_files/figure-latex/unnamed-chunk-24-5.pdf>]
+<presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf, id=369, 469.755pt x 325.215pt>
 File: presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf Graphic file (type pdf)
 <use presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf>
-Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf  used on input line 1135.
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf  used on input line 1140.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 1135--1137
+Underfull \hbox (badness 10000) in paragraph at lines 1140--1142
 [][]
  []
+
+
+Underfull \vbox (badness 2707) detected at line 1171
+ []
+
+[29 <./presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf>]
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[30]
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[29 <./presentation_structure_files/figure-latex/unnamed-chunk-25-1.pdf>] [30] (./presentation_structure.aux)
+[31]
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+
+Underfull \vbox (badness 10000) detected at line 1369
+ []
+
+[32]
+<presentation_structure_files/figure-latex/unnamed-chunk-31-1.pdf, id=395, 469.755pt x 325.215pt>
+File: presentation_structure_files/figure-latex/unnamed-chunk-31-1.pdf Graphic file (type pdf)
+<use presentation_structure_files/figure-latex/unnamed-chunk-31-1.pdf>
+Package pdftex.def Info: presentation_structure_files/figure-latex/unnamed-chunk-31-1.pdf  used on input line 1371.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 1371--1373
+[][]
+ []
+
+[33]
+Overfull \vbox (77.60707pt too high) has occurred while \output is active []
+
+[34 <./presentation_structure_files/figure-latex/unnamed-chunk-31-1.pdf>]
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[35] [36]
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[37] [38] (./presentation_structure.aux)
  ***********
 LaTeX2e <2023-06-01> patch level 1
 L3 programming layer <2023-08-29>
  ***********
 Package rerunfilecheck Info: File `presentation_structure.out' has not changed.
-(rerunfilecheck)             Checksum: 179865C4790BD3285B8B7AAEDA7B8236;2758.
+(rerunfilecheck)             Checksum: 2072FFD267DE8EF50D1C537736CA5769;3611.
  ) 
 Here is how much of TeX's memory you used:
- 13234 strings out of 476894
- 212323 string characters out of 5808354
- 1941791 words of memory out of 5000000
- 34205 multiletter control sequences out of 15000+600000
- 603460 words of font info for 82 fonts, out of 8000000 for 9000
+ 13268 strings out of 476894
+ 213277 string characters out of 5808354
+ 1939791 words of memory out of 5000000
+ 34222 multiletter control sequences out of 15000+600000
+ 609457 words of font info for 84 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  66i,15n,67p,625b,574s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx7.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtko10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on presentation_structure.pdf (30 pages, 467991 bytes).
+</Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx7.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtko10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/wolff/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
+Output written on presentation_structure.pdf (38 pages, 511859 bytes).
 PDF statistics:
- 437 PDF objects out of 1000 (max. 8388607)
- 337 compressed objects within 4 object streams
- 67 named destinations out of 1000 (max. 500000)
- 245 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 508 PDF objects out of 1000 (max. 8388607)
+ 396 compressed objects within 4 object streams
+ 83 named destinations out of 1000 (max. 500000)
+ 282 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -39,7 +39,7 @@ calc_metrics <- function(pred, true) {
   pred_obj <- prediction(as.numeric(pred), as.numeric(true))
   perf <- performance(pred_obj, "auc")
   AUC <- as.numeric(perf@y.values)
-  return(c(AUC, Sensitivity, Specificity, F1, Accuracy))
+  return(c(AUC, Sensitivity, Precision, F1, Accuracy))
 }
 
 
@@ -67,7 +67,7 @@ ggplot(coef_df, aes(x = reorder(Variable, Importance), y = Importance, fill = Im
         axis.title.x = element_blank(),
         legend.position = "none") +
   coord_flip() +
-  ggtitle(paste(model_string, "Model - Variable Importance"))
+  ggtitle("Variable Importance")
 
 }
 ```
@@ -268,7 +268,7 @@ ggcorrplot(corr,
 
 ```{r}
 result <- check_collinearity(log.model)
-plot(result)
+plot(result) + ggtitle("")
 ```
 ### Outliers
 ```{r}
@@ -296,13 +296,13 @@ metrics.elasticnet <- calc_metrics(predicted.classes.elasticnet, y.test)
 # Store in a dataframe
 df_metrics <- as.data.frame(matrix(c(metrics.log, metrics.lasso.min, metrics.lasso.1se, metrics.ridge, metrics.elasticnet), nrow = 5))
 colnames(df_metrics) <- c("Logistic", "Lasso_min", "Lasso_1se", "Ridge", "ElasticNet")
-rownames(df_metrics) <- c("AUC", "Sensitivity", "Specificity", "F1", "Accuracy")
+rownames(df_metrics) <- c("AUC", "Recall", "Precision", "F1", "Accuracy")
 df_metrics
 ```
 
 ### Latex Table Metrics
 ```{r results='asis'}
-metrics_latex <- df_metrics %>%
+metrics_latex <- df_metrics[-1, ] %>%
   kable(format = "latex", booktabs = TRUE, align = c('c'), digits = 3, escape = FALSE,
         col.names = c("Logistic", "Lasso $\\lambda_{\\text{min}}$", 
                       "Lasso $\\lambda_{\\text{1se}}$", "Ridge", "ElasticNet")) %>%
@@ -310,8 +310,8 @@ metrics_latex <- df_metrics %>%
   row_spec(0, bold = TRUE) %>%
   column_spec(1, bold = TRUE) %>%
   add_header_above(c(" " = 1, "Models" = 5), bold = TRUE) %>%  
-  row_spec(nrow(df_metrics) - 1, extra_latex_after = "\\midrule[.08em]") %>% 
-  row_spec(nrow(df_metrics), bold = TRUE)
+  row_spec(nrow(df_metrics) - 2, extra_latex_after = "\\midrule[.08em]") %>% 
+  row_spec(nrow(df_metrics) - 1, bold = TRUE)
 
 print(metrics_latex)
 
@@ -335,15 +335,15 @@ df_coef <- data.frame(
 rownames(df_coef) <- names(coef.log)
 
 options(scipen = 999)
-df_coef_sparse <- round(df_coef, 4)
-df_coef_sparse[] <- apply(df_coef, 2, function(x) ifelse(x == 0, '.', x))
+df_coef_sparse <- round(df_coef, 3)
+df_coef_sparse[] <- apply(df_coef_sparse, 2, function(x) ifelse(x == 0, '.', x))
 
 df_coef_sparse
 ```
 ### Latex Table Coef
 ```{r results='asis'}
 coef_latex <- df_coef_sparse %>%
-  kable(digits = 3, format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
+  kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
         col.names = c("Logistic", "Lasso $\\lambda_{\\text{min}}$", 
                       "Lasso $\\lambda_{\\text{1se}}$", "Ridge", "ElasticNet")) %>%
   kable_styling(latex_options = c("striped", "scale_down", "hold_position"), position = "center") %>%
@@ -408,13 +408,23 @@ elasticnet.conf.df$Reference <- factor(elasticnet.conf.df$Reference, levels = c(
 names(elasticnet.conf.df) <- c('Target','Prediction','N')
 plot_confusion_matrix(elasticnet.conf.df, add_normalized = FALSE, add_row_percentages = FALSE, add_col_percentages = FALSE, rotate_y_text = TRUE, place_x_axis_above = TRUE, class_order = c("Positive", "Negative"))
 ```
-### Variable Importance
+### Variable Importance not working great because font size
 ```{r}
+#png(filename = "varimp_log.png", width = 3000, height = 3000)
 importance_plot("Logistic")
+#dev.off()
+#png(filename = "varimp_lasso_min.png", width = 3000, height = 3000)
 importance_plot("Lasso_min")
+#dev.off()
+#png(filename = "varimp_lasso_1se.png", width = 3000, height = 3000)
 importance_plot("Lasso_1se")
+#dev.off()
+#png(filename = "varimp_ridge.png", width = 3000, height = 3000)
 importance_plot("Ridge")
+#dev.off()
+#png(filename = "varimp_elasticnet.png", width = 3000, height = 3000)
 importance_plot("ElasticNet")
+#dev.off()
 ```
 Perc missing
 ```{r}
@@ -456,12 +466,193 @@ coef_summary <- summary(log.model)$coefficients
 coef_summary <- round(as.data.frame(coef_summary)[, c(1, 4)], 3)
 colnames(coef_summary) <- c("Estimate", "p-value")
 
-coef_summary$`p-value` <- cell_spec(coef_summary$`p-value`, "latex", 
-                                bold = ifelse(coef_summary$`p-value` < 0.05, TRUE, FALSE))
+# coef_summary$`p-value` <- cell_spec(coef_summary$`p-value`, "latex", 
+#                                 bold = ifelse(coef_summary$`p-value` < 0.05, TRUE, FALSE))
+# # Create the LaTeX table
+# kable(coef_summary, "latex", booktabs = TRUE, align = "c", escape = F) %>%
+#   kable_styling(latex_options = c("striped", "scale_down", "hold_position")) %>%
+#   row_spec(0, bold = TRUE)
+
+# Add stars based on significance level and make significant p-values bold
+coef_summary$`p-value` <- sapply(coef_summary$`p-value`, function(p) {
+  stars <- ifelse(p < 0.001, "***", ifelse(p < 0.01, "**", ifelse(p < 0.05, "*", "")))
+  value_with_stars <- paste0(round(p, 3), stars)
+  cell_spec(value_with_stars, "latex", bold = p < 0.05)
+})
+
 # Create the LaTeX table
 kable(coef_summary, "latex", booktabs = TRUE, align = "c", escape = F) %>%
   kable_styling(latex_options = c("striped", "scale_down", "hold_position")) %>%
   row_spec(0, bold = TRUE)
 
+```
 
+```{r results='asis'}
+coef_latex <- coef_summary %>%
+  kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
+        col.names = c("Estimate", "p value")) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), position = "center") %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE) %>%
+  #add_header_above(c(" " = 1, "Logistic Regression" = 2), bold = TRUE)
+
+print(coef_latex)
+```
+
+### coef latex per model - lasso both
+```{r results='asis'}
+coef_latex <- df_coef_sparse[, 2:3] %>%
+  kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
+        col.names = c("Lasso $\\lambda_{\\text{min}}$", "Lasso $\\lambda_{\\text{1se}}$")) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), position = "center") %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, "Estimates" = 2), bold = TRUE)
+
+print(coef_latex)
+```
+### coef latex per model - log, ridge
+```{r results='asis'}
+coef_latex <- df_coef_sparse[, c(1,4)] %>%
+  kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
+        col.names = c("Logistic", "Ridge")) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), position = "center") %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, "Estimates" = 2), bold = TRUE)
+
+print(coef_latex)
+```
+### coef latex per model - log, elastic net
+```{r results='asis'}
+coef_latex <- df_coef_sparse[, c(1,5)] %>%
+  kable(format = "latex", booktabs = TRUE, align = c('c'), escape = FALSE,
+        col.names = c("Logistic", "ElasticNet")) %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), position = "center") %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, "Estimates" = 2), bold = TRUE)
+
+print(coef_latex)
+```
+
+```{r}
+# Plot the coefficient paths with thicker lines
+plot(cv.lasso.model$glmnet.fit, xvar = "lambda", label = TRUE, cex.axis = 1.5, lwd = 2)
+
+# Add vertical lines for lambda.min and lambda.1se with thicker lines
+abline(v = log(cv.lasso.model$lambda.min), col = "red", lty = 2, lwd = 2)
+abline(v = log(cv.lasso.model$lambda.1se), col = "blue", lty = 2, lwd = 2)
+
+# Add a legend with LaTeX-style text and increased font size, and thicker lines
+legend("topright", 
+       legend = expression(lambda["min"], lambda["1se"]), 
+       col = c("red", "blue"), 
+       lty = 2, 
+       cex = 1.5, 
+       lwd = 0.5, bty = "n")
+
+```
+p value Acc > NIR
+```{r}
+# Number of trials
+n <- 98
+
+# Number of successes (correctly classified instances)
+# Accuracy is 0.8367, so the number of successes would be 0.8367 * 392
+n_success <- round(0.8367 * n)
+
+# No Information Rate
+nir <- 0.6837
+
+# Perform binomial test
+binom_test_result <- binom.test(n_success, n, p = nir, alternative = "greater")
+
+# Print the result
+print(binom_test_result)
+
+```
+```{r results='asis'}
+log.conf$overall["Accuracy"]
+log.conf$overall["AccuracyPValue"]
+
+tibble(Accuracy = log.conf$overall["Accuracy"],
+       `p-value [Acc > NIR]` = log.conf$overall["AccuracyPValue"])
+
+result_table <- tibble(Accuracy = log.conf$overall["Accuracy"],
+                       `p-value [Acc > NIR]` = log.conf$overall["AccuracyPValue"])
+
+# Round values for better formatting, if needed
+result_table$Accuracy <- round(result_table$Accuracy, 4)
+result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 4)
+
+# Generate LaTeX table
+kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"))
+
+```
+```{r}
+result_table <- tibble(Accuracy = log.conf$overall["Accuracy"],
+                       `p-value [Acc > NIR]` = log.conf$overall["AccuracyPValue"])
+
+# Round values for better formatting, if needed
+result_table$Accuracy <- round(result_table$Accuracy, 4)
+result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 4)
+
+# Generate LaTeX table
+kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"))
+```
+
+```{r}
+result_table <- tibble(Accuracy = ridge.conf$overall["Accuracy"],
+                       `p-value [Acc > NIR]` = ridge.conf$overall["AccuracyPValue"])
+
+# Round values for better formatting, if needed
+result_table$Accuracy <- round(result_table$Accuracy, 4)
+result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 4)
+
+# Generate LaTeX table
+kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"))
+```
+
+```{r}
+#c("Lasso $\\lambda_{\\text{min}}$", "Lasso $\\lambda_{\\text{1se}}$")
+result_table <- tibble(Accuracy = lasso.min.conf$overall["Accuracy"],
+                       `p-value [Acc > NIR]` = lasso.min.conf$overall["AccuracyPValue"])
+
+# Round values for better formatting, if needed
+result_table$Accuracy <- round(result_table$Accuracy, 4)
+result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 4)
+
+# Generate LaTeX table
+kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"))
+```
+
+```{r}
+result_table <- tibble(Accuracy = lasso.1se.conf$overall["Accuracy"],
+                       `p-value [Acc > NIR]` = lasso.1se.conf$overall["AccuracyPValue"])
+
+# Round values for better formatting, if needed
+result_table$Accuracy <- round(result_table$Accuracy, 4)
+result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 4)
+
+# Generate LaTeX table
+kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"))
+```
+
+```{r}
+result_table <- tibble(Accuracy = elasticnet.conf$overall["Accuracy"],
+                       `p-value [Acc > NIR]` = elasticnet.conf$overall["AccuracyPValue"])
+
+# Round values for better formatting, if needed
+result_table$Accuracy <- round(result_table$Accuracy, 4)
+result_table$`p-value [Acc > NIR]` <- round(result_table$`p-value [Acc > NIR]`, 4)
+
+# Generate LaTeX table
+kable(result_table, "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("scale_down", "hold_position"))
 ```
